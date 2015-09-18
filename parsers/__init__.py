@@ -213,7 +213,7 @@ particles_re = re.compile(r'''(\d{4}\-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2},\d{1,})
     \s+Status:\s+Complete\s+
     (\d{1,})
     \s+particles\s+in\s+
-    (.*)\s+ms\(
+    (.*)\s+m?s\(
     ''', re.X)
     
 def parse_ingest_performance_log(edex_log):
