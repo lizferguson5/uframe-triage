@@ -3,7 +3,7 @@
 # USAGE:
 #
 
-PATH=${PATH}:/bin;
+PATH=${PATH}:/bin:${HOME}/uframe-triage;
 
 app=$(basename $0);
 
@@ -43,8 +43,8 @@ done
 # Remove option from $@
 shift $((OPTIND-1));
 
-TRIAGE_SOURCE_ROOT='/Users/kerfoot/datasets/ooi/edex-logs/triage';
-TRIAGE_DEST_ROOT='/Users/kerfoot/datasets/ooi/edex-logs/triage/parsed';
+TRIAGE_SOURCE_ROOT="${HOME}/triage";
+TRIAGE_DEST_ROOT="${TRIAGE_SOURCE_ROOT}/results";
 
 if [ ! -d "$TRIAGE_SOURCE_ROOT" ]
 then
@@ -54,8 +54,9 @@ fi
 
 if [ ! -d "$TRIAGE_DEST_ROOT" ]
 then
-    echo "Invalid triage destination directory: $TRIAGE_DEST_ROOT" >&2;
-    exit 1;
+    echo "Creating triage destination directory: $TRIAGE_DEST_ROOT" >&2;
+    mkdir -m 755 $TRIAGE_DEST_ROOT;
+    [ "$?" -ne 0 ] && exit 1;
 fi
 
 for d in ${TRIAGE_SOURCE_ROOT}/*
@@ -66,18 +67,30 @@ do
     # Strip off the deployment name to create the output file
     deployment=$(basename $d);
     echo '------------------------------------------------------------------------------';
-    echo "Deployment: $deployment";
+    echo "Directory: $deployment";
+
+    DEST_DIR="${TRIAGE_DEST_ROOT}/${deployment}";
+    if [ ! -d "$DEST_DIR" ]
+    then
+        echo "Creating destination: $DEST_DIR";
+        mkdir -m 755 $DEST_DIR;
+        [ "$?" -ne 0 ] && continue;
+    fi
 
     # Create the output file name and see if it already exists
-    parsed_log="${TRIAGE_DEST_ROOT}/${deployment}.parsed.json";
+    parsed_log="${DEST_DIR}/${deployment}.parsed.json";
     if [ -f "$parsed_log" ]
     then
-        if [ -n "$FORCE" ]
+        bytes=$(stat -c %s $parsed_log);
+        if [ "$bytes" -gt 0 ]
         then
-            echo "Overwriting existing parsed results file: $parsed_log";
-        else
-            echo "${deployment}: Skipping existing parsed results file";
-            continue;
+            if [ -n "$FORCE" ]
+            then
+                echo "Overwriting existing parsed results file: $parsed_log";
+            else
+                echo "${deployment}: Skipping existing parsed results file";
+                continue;
+            fi
         fi
     fi
 
@@ -111,7 +124,7 @@ do
 
         echo 'Parsing ingest logs results...';
         ts0=$(date +%s);
-        /Users/kerfoot/code/ooi/uframe/triage/parse_edex_decoder-performance.py \
+        parse_edex_decoder-performance.py \
             -p $particle_log \
             $decoder_log > $parsed_log;
         ts1=$(date +%s);
