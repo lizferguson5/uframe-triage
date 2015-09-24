@@ -3,6 +3,7 @@
 import re
 import sys
 import os
+import csv
 
 # Matches and captures:
 # 1. timestamp
@@ -242,3 +243,59 @@ def parse_ingest_performance_log(edex_log):
     fid.close()
     
     return files
+    
+def parse_instrument_availability_csv(csv_file):
+    
+    csv_file = '/Users/kerfoot/Downloads/OOI/triage/InstrumentAvailability-CoastalGlider.csv'
+
+    fid = open(csv_file, 'rU')
+    csv_reader = csv.reader(fid)
+    
+    # Read in the first 3 rows and discard
+    csv_reader.next()
+    csv_reader.next()
+    csv_reader.next()
+    
+    instruments = []
+    parameter = {'parser' : None,
+    'level' : None,
+    'calc' : None,
+    'stream' : None,
+    'parameter' : None} 
+    
+    instrument_streams = {} 
+    for r in csv_reader:
+        
+        if r[1] and r[2]:
+            
+            if instrument_streams:
+                instruments.append(instrument_streams)
+                
+            instrument_streams = {'instrument' : '{:s}{:s}'.format(r[1], r[2]),
+                'parameters' : []}
+            continue
+            
+        if r[3] and r[4] and r[5] and r[6]:
+            
+            if not r[7]:
+                
+                stream = r[6]
+                continue
+            
+            method = None
+            if r[9].startswith('T'):
+                method = 'telemetered'
+            elif r[9].startswith('R'):
+                method = 'recovered'
+                
+            parameter = {'parser' : r[3],
+                'level' : r[4],
+                'calc' : r[5],
+                'stream' : stream,
+                'parameter' : r[6],
+                'method' : method,
+                'method_type' : r[9]} 
+                
+            instrument_streams['parameters'].append(parameter)
+            
+    return instruments
