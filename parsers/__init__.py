@@ -245,8 +245,6 @@ def parse_ingest_performance_log(edex_log):
     return files
     
 def parse_instrument_availability_csv(csv_file):
-    
-    csv_file = '/Users/kerfoot/Downloads/OOI/triage/InstrumentAvailability-CoastalGlider.csv'
 
     fid = open(csv_file, 'rU')
     csv_reader = csv.reader(fid)
@@ -270,23 +268,35 @@ def parse_instrument_availability_csv(csv_file):
             
             if instrument_streams:
                 instruments.append(instrument_streams)
-                
-            instrument_streams = {'instrument' : '{:s}{:s}'.format(r[1], r[2]),
+         
+            instrument_types = re.split('\s', r[1])
+            if len(instrument_types) > 1:
+                instrument_type = instrument_types[1][:-1]
+            else:
+                instrument_type = r[1]
+                  
+            instrument_streams = {'instrument' : instrument_type,
                 'parameters' : []}
             continue
             
-        if r[3] and r[4] and r[5] and r[6]:
+        if r[3] and r[4] and r[6]:
+            # True if csv line has a parser name, level and stream/parameter name
             
             if not r[7]:
+                # True if there is no pdID, in which it's a stream and not a parameter
                 
                 stream = r[6]
-                continue
+                #continue
             
             method = None
             if r[9].startswith('T'):
                 method = 'telemetered'
-            elif r[9].startswith('R'):
-                method = 'recovered'
+            elif r[9].startswith('RH'):
+                method = 'recovered_host'
+            elif r[9].startswith('RI'):
+                method = 'recovered_instrument'
+            elif r[9].startswith('RW'):
+                method = 'recovered_wfp'
                 
             parameter = {'parser' : r[3],
                 'level' : r[4],
@@ -294,8 +304,12 @@ def parse_instrument_availability_csv(csv_file):
                 'stream' : stream,
                 'parameter' : r[6],
                 'method' : method,
-                'method_type' : r[9]} 
+                'method_type' : r[9],
+                'pdID' : r[7]} 
                 
             instrument_streams['parameters'].append(parameter)
+            
+    if instrument_streams:
+        instruments.append(instrument_streams)
             
     return instruments
