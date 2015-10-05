@@ -36,6 +36,8 @@ def main(args):
     
     for x in results.keys():
         for s in results[x]:
+            if not args.display_all and s['level'] == 'L0':
+                continue
             row = [s[k] for k in cols]
             stdout_writer.writerow(row)
     
@@ -65,13 +67,16 @@ def validate_platform_streams(parameters_csv, master_csv, method=None):
     mfid.close()
         
     # Read in the parameters csv
-    p_csv_reader = csv.reader(open(parameters_csv, 'rU'))
+    pfid = open(parameters_csv, 'rU')
+    p_csv_reader = csv.reader(pfid)
     p_cols = p_csv_reader.next()
     col_indices = range(0,len(p_cols))
     parameters = []
     for row in p_csv_reader:
         
         parameters.append({p_cols[i] : row[i] for i in col_indices})
+    
+    pfid.close()
         
     if not parameters:
         return results
@@ -128,6 +133,10 @@ if __name__ == '__main__':
         dest='method',
         default=None,
         help='Specify a stream method (i.e.: telemetered, recovered_host, etc.)')
+    arg_parser.add_argument('-a', '-all',
+        dest='display_all',
+        action='store_true',
+        help='Display L0 stream/parameter names even thought they are not checked for presence or absence.')
     arg_parser.add_argument('-f', '--found',
         dest='found',
         action='store_true',
