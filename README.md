@@ -28,6 +28,14 @@ The toolbox contains the following top-level scripts:
 
 ###Usage
 
+<b>Important:</b> The scripts below require a properly configured python environment.  For the servers doing triage ingestion, this installation is found in:
+
+    > /home/asadev/python27
+    
+Import the correct python environment by sourcing the getenv.sh script:
+
+    > source /home/asadev/python27/getenv.sh
+    
 Ingestion of a representative platform dataset into UFrame creates a series of log files containing a variety of diagnostic information on the ingestion process.  Given that the sizes of these files can be fairly large (20 - 700Mb), parsing these files on the fly and interrogating the results is prohibitive to actually getting any work done.  Currently, the triage process involves parsing the following 2 edex log files:
 
 - edex-ooi-dataset_decoder*.log: this log file maps a file name queued up for ingestion to the parser used for decoding/parsing.  Each file is assigned a unique [Universally Unique Identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier), which can then be used to link the file to information contained in other edex log files.
